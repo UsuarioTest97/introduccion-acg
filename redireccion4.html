@@ -1,0 +1,63 @@
+<!doctype html>
+<!--[if lte IE 9]>
+<html lang="en" class="oldie">
+<![endif]-->
+<!--[if gt IE 9]><!-->
+<html lang="en">
+<!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Neon Sign</title>
+  <link rel="stylesheet" media="all" href="style2.css" />
+</head>
+<body>
+<h1>Demo de Collab</h1>
+<p style="color:#FFFFFF;font-size: 14px;";> Primero Insatalar Gekko.<br><br>
+pip install gekko<br><br>
+from gekko import GEKKO<br>
+import numpy as np<br>
+import matplotlib.pyplot as plt<br><br>
+
+# Genere "datos" con simulación de procesos<br>
+nt = 51<br>
+# Pasos de entrada<br>
+u_meas = np.zeros(nt)<br>
+u_meas[3:10] = 1.0<br>
+u_meas[10:20] = 2.0<br>
+u_meas[20:40] = 0.5<br>
+u_meas[40:] = 3.0<br>
+# modelo de simulación<br>
+p = GEKKO()<br>
+p.time = np.linspace(0,10,nt)<br>
+n = 1 #orden del modelo de proceso<br>
+# Parametros<br>
+steps = np.zeros(n)<br>
+p.u = p.MV(value=u_meas)<br>
+p.u.FSTATUS=1<br>
+p.K = p.Param(value=1) #gain<br>
+p.tau = p.Param(value=5) #time constant<br>
+# Intermediate<br>
+p.x = [p.Intermediate(p.u)]<br>
+# Variables<br>
+p.x.extend([p.Var() for _ in range(n)])  #state variables<br>
+p.y = p.SV() #measurement<br>
+# Equations<br>
+p.Equations([p.tau/n * p.x[i+1].dt() == -p.x[i+1] + p.x[i] for i in range(n)])<br>
+p.Equation(p.y == p.K * p.x[n])<br>
+# Simulate<br>
+p.options.IMODE = 4<br>
+p.solve(disp=False)<br>
+# add measurement noise<br>
+y_meas = (np.random.rand(nt)-0.5)*0.2<br>
+for i in range(nt):<br>
+    y_meas[i] += p.y.value[i]<br>
+plt.plot(p.time,u_meas,'b:',label='Input (u) meas')<br>
+plt.plot(p.time,y_meas,'ro',label='Output (y) meas')<br>
+plt.plot(p.time,p.y.value,'k-',label='Output (y) actual')<br>
+plt.legend()<br>  
+plt.show()<br>
+<a href="https://colab.research.google.com/notebooks/welcome.ipynb?hl=es#scrollTo=AQVAIAOtBvO1" style="color: cornflowerblue;">Collab Phyton</a>
+</p>
+</body>
+</html>
